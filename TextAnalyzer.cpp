@@ -1,13 +1,70 @@
+#include "HashFunctions.h"
 #include "TextAnalyzer.h"
-#include <stdio.h>
-#include <ctype.h>
 
-struct terminal_list
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// WORD COLLECTION KEEPING
+inline void SanityProblem()
 {
-    unsigned char * terminals;
-    unsigned int terminal_number;
+     fprintf(stderr,"Sanity Byte problem :S \n ");
+}
 
-};
+bool CollectionOk(struct word_collection * acol)
+{
+   if ( acol != 0 ) {  if ( acol->sanity_byte != 666 ) { SanityProblem(); return false;}
+                       return true;
+                    }
+    return false;
+}
+bool DeleteWordCollection(struct word_collection * acol)
+{
+   if ( acol != 0 ) {  if ( acol->sanity_byte != 666 ) { SanityProblem(); return false;}
+                       free(acol);
+                       acol = 0;
+                    }
+    return true;
+}
+
+bool NewWordCollection(struct word_collection * acol)
+{
+   if ( acol != 0 ) {  if ( !DeleteWordCollection(acol) ) { return false; }
+                    }
+
+   struct word_collection tmp;
+   acol = ( struct word_collection * ) malloc ( sizeof( tmp ) );
+   acol->sanity_byte = 666;
+   return true;
+}
+
+unsigned int FindWordAtCollection(word_collection * acol,unsigned char * word,unsigned int length)
+{
+ if ( !CollectionOk(acol) ) { return 0; }
+
+ // SERIAL SEARCH ! , TO BE IMPROVED :P
+ unsigned int hash_data = hash (word);
+ for ( unsigned int i = 0; i < acol->words_number; i++ )
+ {
+   // TODO
+ }
+
+ return 0;
+}
+
+bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned int length)
+{
+   unsigned int hash_data = hash (word);
+   // TODO
+   return true;
+}
+
+bool DeleteWordFromCollection( word_collection * acol,unsigned char * word,unsigned int length)
+{
+   // TODO
+   return true;
+}
+// WORD COLLECTION KEEPING
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 
 unsigned int FindFirstInstanceOfChar(unsigned int ptr,char * text,char chartofind,unsigned int &textsize)
 {
@@ -41,7 +98,7 @@ bool IgnoreWord(unsigned char * theword , unsigned int wordsize )
   return retres;
 }
 
-void Upcase(unsigned char * text,unsigned int textsize) //Metatrepei String se Upcase
+void UpcaseIt(unsigned char * text,unsigned int textsize) //Metatrepei String se Upcase
 {
     for (unsigned int i=0; i<textsize; i++)
     {
@@ -64,6 +121,7 @@ void ExtractWords(char * text,unsigned int &textsize)
     {
 
       if ( found_word == 1 ) { newword[act_ptr++]=0;
+                               UpcaseIt(newword,act_ptr);
                                if ( IgnoreWord(newword , act_ptr ) == false )
                                {
                                 printf("%s \n",newword);
@@ -120,11 +178,6 @@ unsigned int ClearTextFromHTMLTags(char * text,unsigned int &textsize)
  unsigned int token = 666; // <- GIA NA MPEI STO PRWTO WHILE LOOP!
  unsigned int token2 = 0;
 
- terminal_list terms;
- terms.terminals = new unsigned char [2];
- terms.terminal_number = 2;
- terms.terminals[0] = '<';
- terms.terminals[1] = '>';
 
  printf("ClearTextFromHTMLTags \n");
 
@@ -137,17 +190,16 @@ unsigned int ClearTextFromHTMLTags(char * text,unsigned int &textsize)
  while ( token > 0  )
  {
    token = FindFirstInstanceOfChar(ptr,text,'<',textsize);
-   //printf("Found < at %u \n",token);
+
    if ( token != 0 ) { ptr = token; }
 
 
    if (  token > 0  )
    {
     token2 = FindFirstInstanceOfChar(ptr,text,'>',textsize);
-    //printf("Found > at %u \n",token2);
+
     if ( token2 > 0 )
     {
-        //printf("Erasing %u to %u \n",token,token2);
         for ( unsigned int i=token; i<=token2; i++ )
         {
              text[i]=' ';

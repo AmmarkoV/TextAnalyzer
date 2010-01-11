@@ -5,29 +5,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "WordCollection.h"
 
-struct word
-{
-    unsigned long hash;
-    unsigned int occurances;
-    unsigned short length;
-    unsigned char * string;
-};
+word_collection * TextAnalyzer_NewWordCollection();
+unsigned int TextAnalyzer_WordOccurances(word_collection * acol,unsigned char * theword , unsigned int wordsize);
+void TextAnalyzer_DeleteWordCollection(word_collection * acol);
 
-struct word_collection
-{
-    unsigned int total_words;
-    unsigned int words_mem_length_cap;
-    unsigned int words_mem_length;
-    struct word * words;
-    unsigned int sanity_byte;
-
-};
-
-//bool DeleteWordCollection(struct word_collection * acol);
-//bool NewWordCollection(struct word_collection * acol);
-//bool CollectionOk(struct world_collection * acol);
-
-unsigned int ClearTextFromHTMLTags(char * text,unsigned int &textsize);
+unsigned int ClearTextFromHTMLTags(word_collection * acol,char * text,unsigned int &textsize);
 
 #endif // TEXTANALYZER_H_INCLUDED

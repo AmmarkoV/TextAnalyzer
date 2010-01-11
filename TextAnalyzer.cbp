@@ -40,6 +40,8 @@
 		<Unit filename="HashFunctions.h" />
 		<Unit filename="TextAnalyzer.cpp" />
 		<Unit filename="TextAnalyzer.h" />
+		<Unit filename="WordCollection.cpp" />
+		<Unit filename="WordCollection.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

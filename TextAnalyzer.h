@@ -8,16 +8,17 @@
 
 struct word
 {
-    unsigned int hash;
+    unsigned long hash;
     unsigned int occurances;
-    unsigned int length;
+    unsigned short length;
     unsigned char * string;
 };
 
 struct word_collection
 {
-    unsigned int words_number;
     unsigned int total_words;
+    unsigned int words_mem_length_cap;
+    unsigned int words_mem_length;
     struct word * words;
     unsigned int sanity_byte;
 

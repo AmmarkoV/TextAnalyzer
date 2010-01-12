@@ -1,5 +1,4 @@
 #include "WordCollection.h"
-#include "HashFunctions.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -12,11 +11,8 @@
 bool IgnoreWord(unsigned char * theword , unsigned int wordsize )
 {
   bool retres = true;
-
-  if ( wordsize > 30 ) {}
-  else
+  if ( wordsize > 30 ) {} else
   if ( wordsize >= 3 ) retres = false;
-
   return retres;
 }
 
@@ -34,7 +30,7 @@ inline unsigned long inline_sdbm(unsigned char *str)
   return hash;
 }
 
-void SanityProblem()
+inline void SanityProblem()
 {
   fprintf(stderr,"Sanity byte problem -> memory overlapping -> buggy code :P :S \n ");
 }
@@ -58,24 +54,31 @@ void SanityProblem()
 */
 
 // STRING COMPARISON WITH A STRING STORED @ Word Collection - NH means NOT using HASH
-bool NH_StringEqualToWordInCollection(word_collection * acol,unsigned int index,unsigned char * word,unsigned short length)
+inline bool NH_StringEqualToWordInCollection(word_collection * acol,unsigned int index,unsigned char * word,unsigned short length)
 {
-  if ( acol->words[index].length!=length ) return false;
+  if ( (acol->words[index].length==0) || ( acol->words[index].length!=length ) ) return false;
 
   for ( int i=0; i<length; i++)
     {
       if (acol->words[index].string[i]!=word[i]) return false;
     }
-
   return true;
 }
 
 
-bool CollectionOk(struct word_collection * acol)
+// STRING COMPARISON WITH A STRING STORED @ Word Collection - H means using HASH
+inline bool H_StringEqualToWordInCollection(word_collection * acol,unsigned int index,unsigned long word_hash)
+{
+  if ( acol->words[index].hash!=word_hash ) return false;
+  return true;
+}
+
+
+inline bool CollectionOk(struct word_collection * acol)
 {
   if ( acol != 0 )
     {
-      if ( acol->sanity_byte != 66666 )
+      if ( acol->sanity_byte != SANITY_BYTES_CHECK )
         {
           SanityProblem();
           return false;
@@ -86,19 +89,13 @@ bool CollectionOk(struct word_collection * acol)
   return false;
 }
 
-// STRING COMPARISON WITH A STRING STORED @ Word Collection - H means using HASH
-bool H_StringEqualToWordInCollection(word_collection * acol,unsigned int index,unsigned long word_hash)
-{
-  if ( acol->words[index].hash!=word_hash ) return false;
-  return true;
-}
-
 
 bool DeleteWordCollection(struct word_collection * acol)
 {
+  fprintf(stderr,"Deleting Word Collection!\n");
   if ( acol != 0 )
     {
-      if ( acol->sanity_byte != 66666 )
+      if ( acol->sanity_byte != SANITY_BYTES_CHECK )
         {
           SanityProblem();
           return false;
@@ -106,58 +103,70 @@ bool DeleteWordCollection(struct word_collection * acol)
 
       for ( unsigned int i=0; i<acol->words_mem_length; i++ )
         {
-          free ( acol->words[0].string ) ;
+          if ( (acol->words[i].string!=0) ) free( acol->words[i].string );
+          acol->words[i].length = 0;
         }
 
-      free(acol->words);
+      if ( acol->words != 0 ) free(acol->words);
       free(acol);
-      acol = 0;
     }
   return true;
 }
 
-bool NewWordCollection(struct word_collection * acol)
+struct word_collection * NewWordCollection()
 {
-  if ( acol != 0 )
-    {
-      if ( !DeleteWordCollection(acol) )
-        {
-          return false;
-        }
-    }
+  struct word_collection * acol = 0;
 
   struct word_collection tmp;
   acol = ( struct word_collection * ) malloc ( sizeof( tmp ) );
-  acol->sanity_byte = 66666;
-
-  acol->words_mem_length_cap = 3000;
-  struct word tmpw;
-  acol->words = ( struct word  * ) malloc ( sizeof( tmpw ) );
-
-
-  acol->words_mem_length = 0;
+  acol->sanity_byte = SANITY_BYTES_CHECK;
+  acol->words_mem_length_cap = START_WORD_MEMORY_CAPACITY+1;
+  acol->words_mem_length = 1;
   acol->total_words = 0;
-  acol->words = 0;
-  return true;
+
+  struct word tmpw;
+  acol->words = ( struct word  * ) malloc ( sizeof( tmpw )* ( acol->words_mem_length_cap )  );
+  for ( int i=0; i < acol->words_mem_length_cap; i++)
+  {
+    acol->words[i].hash=0;
+    acol->words[i].occurances=0;
+    acol->words[i].length=0;
+    acol->words[i].string=0;
+  }
+
+  if (! CollectionOk(acol) ) fprintf(stderr,"Error allocating memory.. ( Press c to continue ) \n");
+
+  return acol;
 }
 
 
-unsigned int H_FindWordAtCollection(word_collection * acol, unsigned long hash_data , unsigned char * word,unsigned short length)
+unsigned int FindWordAtCollection(word_collection * acol, unsigned long hash_data , unsigned char * word,unsigned short length)
 {
   if ( !CollectionOk(acol) ) return 0;
 
-  fprintf(stderr,"Searching for `%s` between %u words! \n",word,acol->words_mem_length);
-// SERIAL SEARCH ! , TO BE IMPROVED :P
-  for ( unsigned int i = 0; i < acol->words_mem_length; i++ )
+  fprintf(stderr,"Searching for `%s` between %u words! ... ",word,acol->words_mem_length);
+  // SERIAL SEARCH ! , TO BE IMPROVED :P
+  for ( unsigned int i = 0; i <= acol->words_mem_length; i++ )
     {
-      if (  H_StringEqualToWordInCollection(acol,i,hash_data) )  return i;
+      if (  H_StringEqualToWordInCollection(acol,i,hash_data) )
+      {
+        if (  NH_StringEqualToWordInCollection(acol,i,word,length) )
+        {
+         printf(" found at %u \n",i);
+         return i;
+        } else
+        {
+          printf(" bumped on hash duplicate (%s,%u with %s,%u) while searching! \n",acol->words[i].string,acol->words[i].length,word,length);
+        }
+      }
     }
-
+  printf(" not found!\n");
   return 0;
 }
 
-bool Phys_AddWord2Collection(word_collection * acol,unsigned long hash_data ,unsigned char * word,unsigned short length)
+bool AddNewWord2Collection(word_collection * acol,unsigned long hash_data ,unsigned char * word,unsigned short length)
 {
+  // WORD ASSUMED TO BE AN <<UPCASE>> WORD!
   unsigned int current_memspot = acol->words_mem_length;
 
   if (  acol->words_mem_length_cap <= current_memspot )
@@ -166,15 +175,17 @@ bool Phys_AddWord2Collection(word_collection * acol,unsigned long hash_data ,uns
       return false;
     }
 
+  acol->words[current_memspot].string =(unsigned char *) malloc ( sizeof( unsigned char ) * ( length + 1 ) ); // +1 = final \0
+  if ( acol->words[current_memspot].string == 0 ) { fprintf(stderr,"Could not allocate memory for string .. Adding failed! \n"); return false;}
   acol->words[current_memspot].hash = hash_data;
   acol->words[current_memspot].occurances = 1;
   acol->words[current_memspot].length = length;
-  acol->words[current_memspot].string =(unsigned char *) malloc ( sizeof( unsigned char ) * ( length + 1 ) ); // +1 = final \0
 
   for ( unsigned int i=0; i<length; i++ )
     {
       acol->words[current_memspot].string[i] = word[i];
     }
+  acol->words[current_memspot].string[length]=0;
 
   acol->words_mem_length+=1;
   acol->total_words+=1;
@@ -183,39 +194,38 @@ bool Phys_AddWord2Collection(word_collection * acol,unsigned long hash_data ,uns
 
 bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned short length)
 {
-  if ( !CollectionOk(acol) )
-    {
-      return false;
-    }
+  if ( !CollectionOk(acol) ) return false;
+  if ( length == 0 ) { return false; } // Safe guard
+
+  // Check if word contains an ending \0 , we dont need it , remove it :P
+  if (word[length-1]==0) {length -= 1;}
+
 
   // PREPARE WORD UPCASE DUPLICATE  // DONT FORGET TO FREE IT AFTERWARDS
   unsigned char * act_word; // <- The actual word , upcased :P
   act_word = (unsigned char * ) malloc (sizeof( unsigned char ) * (length + 1 ) );
-  for ( unsigned short i=0; i<length; i++ )
-    {
-      act_word[i]=word[i];
-    }
+  for ( unsigned short i=0; i<length; i++ ) act_word[i]=word[i];
   UpcaseIt(act_word,length);
+  act_word[length]=0;
   // PREPARE WORD UPCASE DUPLICATE
 
-  unsigned long  hash_data = inline_sdbm (act_word);
-
-  unsigned char found=0;
+  unsigned long  hash_data = inline_sdbm (act_word); // Calculate word hash!
 
   // HASH , FAST SEARCH!
-  unsigned int memspot = H_FindWordAtCollection(acol,hash_data,act_word,length);
+  unsigned int memspot = FindWordAtCollection(acol,hash_data,act_word,length);
+  unsigned char found=0;
+  bool retres=true;
   if ( memspot == 0 )
     {
-      // 2 possible states, we didn`t find a word ( we should add it as a new then )
-      // the word is positioned at 0!
-      if ( H_StringEqualToWordInCollection(acol,0,hash_data) )
+      // 2 possible states #1 we didn`t find a word ( we should add it as a new then )
+      // #2 the word is actually positioned at 0!
+      if ( NH_StringEqualToWordInCollection(acol,0,act_word,length) )
         {
           found = 1;
         }
     }
   else
-    {
-      // We found (?) the word at position memspot!
+    { // We found the word at position memspot!
       found = 1;
     }
   // HASH , FAST SEARCH!
@@ -223,36 +233,19 @@ bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned sh
   if ( found == 1 )
     {
       // We have found a matching hash..!
-      // We need to check if it is a real hit or a hash overlap!
-      if  ( NH_StringEqualToWordInCollection(acol,memspot,act_word,length) )
-        {
-          acol->words[memspot].occurances+=1;
-          acol->total_words+=1;
-          free ( act_word );
-          return true;
-        }
-      else
-        {
-          // HASH FUNCTION OVERLAPPED :P
-          found = 0;
-          fprintf(stderr,"Hash Function Overlapped :P \n");
-
-          //ToDO add code that checks words without using hashes!
-          fprintf(stderr,"ToDO add code that checks words without using hashes!\n");
-        }
-
+      acol->words[memspot].occurances+=1;
+      acol->total_words+=1;
     }
-
+     else
   if ( found == 0 )
     {
       // The word was not found , add the word as a new word! :)
-      free ( act_word );
-      return Phys_AddWord2Collection(acol,hash_data,act_word,length);
+      retres = AddNewWord2Collection(acol,hash_data,act_word,length);
     }
 
 
   free ( act_word );
-  return true;
+  return retres;
 }
 
 bool DeleteWordFromCollection( word_collection * acol,unsigned char * word,unsigned short length)
@@ -264,32 +257,33 @@ bool DeleteWordFromCollection( word_collection * acol,unsigned char * word,unsig
 
 unsigned int GetWordOccurances(word_collection * acol,unsigned char * word,unsigned short length)
 {
-  // TODO
   if ( IgnoreWord(word,length) )
     {
+      printf("Ignoring search for occurances ..\n");
       return 0;
     }
 
   // PREPARE WORD UPCASE DUPLICATE  // DONT FORGET TO FREE IT AFTERWARDS
   unsigned char * act_word; // <- The actual word , upcased :P
   act_word = (unsigned char * ) malloc (sizeof( unsigned char ) * (length + 1 ) );
-  for ( unsigned short i=0; i<length; i++ )
-    {
-      act_word[i]=word[i];
-    }
+  for ( unsigned short i=0; i<length; i++ )   act_word[i]=word[i];
   UpcaseIt(act_word,length);
+  act_word[length]=0;
   // PREPARE WORD UPCASE DUPLICATE
 
-  unsigned long hash_data = inline_sdbm(word);
-  fprintf(stderr,"TODO : Add search! \n");
+  unsigned long hash_data = inline_sdbm(act_word);
 
-  unsigned int memspot = H_FindWordAtCollection(acol,hash_data,act_word,length);
+  unsigned int memspot = FindWordAtCollection(acol,hash_data,act_word,length);
 
+  if ( memspot != 0 )
+   {
+     printf("Search found results @ word %u ",memspot);
+     memspot = acol->words[memspot].occurances;
+     printf("%u occurances\n ",memspot);
+   }
 
   free (act_word);
-
-  return memspot; // <- Moufa!
-  return 0;
+  return memspot;
 }
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

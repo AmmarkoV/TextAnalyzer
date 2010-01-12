@@ -1,6 +1,8 @@
 #ifndef WORDCOLLECTION_H_INCLUDED
 #define WORDCOLLECTION_H_INCLUDED
 
+const int SANITY_BYTES_CHECK = 6661230;
+const int START_WORD_MEMORY_CAPACITY = 3000;
 
 struct word
 {
@@ -27,7 +29,7 @@ void UpcaseIt(unsigned char * text,unsigned int textsize); //Metatrepei String s
 
 
 // CONSTRUCTORS / DESTRUCTORS
-bool NewWordCollection(struct word_collection * acol);
+struct word_collection * NewWordCollection();
 bool DeleteWordCollection(struct word_collection * acol);
 
 // FUNCTIONS!

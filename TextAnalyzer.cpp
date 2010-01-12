@@ -3,9 +3,10 @@
 
 word_collection * TextAnalyzer_NewWordCollection()
 {
- word_collection * ret;
- if ( NewWordCollection(ret) ) {  } else
-                               { fprintf(stderr,"Could not commit memory for word collections\n");}
+ word_collection * ret = 0;
+ ret = NewWordCollection();
+ if ( ret != 0) {  } else
+                { fprintf(stderr,"Could not commit memory for word collections\n");}
  return ret;
 }
 
@@ -57,7 +58,7 @@ void ExtractWords(word_collection * acol,char * text,unsigned int &textsize)
                                UpcaseIt(newword,act_ptr);
                                if ( IgnoreWord(newword , act_ptr ) == false )
                                {
-                                 printf("%s \n",newword);
+                                // printf("%s \n",newword);
                                  AddWord2Collection(acol,newword,act_ptr);
                                }
                              }
@@ -106,7 +107,7 @@ void CompressSpaces(char * text,unsigned int &textsize)
 
 unsigned int ClearTextFromHTMLTags(word_collection * acol,char * text,unsigned int &textsize)
 {
- unsigned int start_text_size = textsize;
+// unsigned int start_text_size = textsize;
 
  unsigned int ptr = 0;
  unsigned int token = 666; // <- GIA NA MPEI STO PRWTO WHILE LOOP!

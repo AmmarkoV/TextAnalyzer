@@ -19,6 +19,7 @@ struct word_collection
     unsigned int words_mem_length;
     struct word * words;
     unsigned int sanity_byte;
+    unsigned int memory_usage;
 
 };
 

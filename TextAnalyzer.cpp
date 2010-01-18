@@ -5,9 +5,18 @@ word_collection * TextAnalyzer_NewWordCollection()
 {
  word_collection * ret = 0;
  ret = NewWordCollection();
- if ( ret != 0) {  } else
-                { fprintf(stderr,"Could not commit memory for word collections\n");}
+ if ( ret == 0) { fprintf(stderr,"Could not commit memory for word collections\n");}
  return ret;
+}
+
+bool TextPointerError(char * text,unsigned int textsize)
+{
+ if ( ( textsize==0 ) || ( text == 0 ) )
+ {
+   printf("TextAnalyzer canceled operation..! The text is stored in an invalid position / text is null..\n");
+   return true;
+ }
+ return false;
 }
 
 void TextAnalyzer_DeleteWordCollection(word_collection * acol)
@@ -43,6 +52,7 @@ unsigned int FindFirstInstanceOfChar(unsigned int ptr,char * text,char chartofin
 void ExtractWords(word_collection * acol,char * text,unsigned int &textsize)
 {
   printf("Extract Words called with input size %u \n",textsize);
+  if ( TextPointerError(text,textsize) ) { return; }
   unsigned char found_word=0;
 
   unsigned char * newword;
@@ -79,6 +89,7 @@ void ExtractWords(word_collection * acol,char * text,unsigned int &textsize)
 void CompressSpaces(char * text,unsigned int &textsize)
 {
   printf("Compress Spaces called with input size %u \n",textsize);
+  if ( TextPointerError(text,textsize) ) { return; }
   unsigned char found_space=1;
   unsigned int act_ptr=0;
   for ( unsigned int i=0; i<textsize; i++)
@@ -113,8 +124,8 @@ unsigned int ClearTextFromHTMLTags(word_collection * acol,char * text,unsigned i
  unsigned int token = 666; // <- GIA NA MPEI STO PRWTO WHILE LOOP!
  unsigned int token2 = 0;
 
-
  printf("ClearTextFromHTMLTags \n");
+ if ( TextPointerError(text,textsize) ) { return 0; }
 
  if ( text[0]=='<' )
     {
@@ -139,7 +150,7 @@ unsigned int ClearTextFromHTMLTags(word_collection * acol,char * text,unsigned i
         {
              text[i]=' ';
         }
-        text[token]='|'; // SIGNAL DELIMITER
+        text[token]='|'; // SIGNAL DELIMITER ( IT MEANS AN HTML TAG WAS REPLACED )
       if ( token2 != 0 ) { ptr = token2; }
 
     }

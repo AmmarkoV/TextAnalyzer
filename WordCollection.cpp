@@ -21,6 +21,31 @@ void UpcaseIt(unsigned char * text,unsigned int textsize) //Metatrepei String se
   for (unsigned int i=0; i<textsize; i++) text[i]=toupper(text[i]);
 }
 
+void CutSpaces(unsigned char * text,unsigned short &textsize) //Kovei ta kena deksia k aristera apo to String
+{
+  for (unsigned short i=textsize-1; i>0; i--)
+  {
+     if ( (text[i]!='_')&&(text[i]!=' ') ) break; else
+                        { text[i]=0; --textsize; }
+  }
+
+  unsigned short start_cut = 0;
+  for (unsigned short i=0; i<textsize; i++)
+  {
+     if ( (text[i]!='_')&&(text[i]!=' ') ) break; else
+                        { ++start_cut; }
+
+  }
+  if ( start_cut > 0 )
+  {
+   for (unsigned short i=start_cut; i<textsize; i++)
+   {
+     text[i-start_cut]=text[i];
+   }
+   textsize-=start_cut;
+  }
+
+}
 
 inline unsigned long inline_sdbm(unsigned char *str)
 {
@@ -123,9 +148,12 @@ struct word_collection * NewWordCollection()
   acol->words_mem_length_cap = START_WORD_MEMORY_CAPACITY+1;
   acol->words_mem_length = 1;
   acol->total_words = 0;
+  acol->memory_usage = 0;
 
   struct word tmpw;
   acol->words = ( struct word  * ) malloc ( sizeof( tmpw )* ( acol->words_mem_length_cap )  );
+  acol->memory_usage += sizeof( tmpw )* ( acol->words_mem_length_cap );
+
   for ( int i=0; i < acol->words_mem_length_cap; i++)
   {
     acol->words[i].hash=0;
@@ -152,7 +180,7 @@ unsigned int FindWordAtCollection(word_collection * acol, unsigned long hash_dat
       {
         if (  NH_StringEqualToWordInCollection(acol,i,word,length) )
         {
-         printf(" found at %u \n",i);
+         printf(" found at %u , %u times \n",i,acol->words[i].occurances);
          return i;
         } else
         {
@@ -176,6 +204,9 @@ bool AddNewWord2Collection(word_collection * acol,unsigned long hash_data ,unsig
     }
 
   acol->words[current_memspot].string =(unsigned char *) malloc ( sizeof( unsigned char ) * ( length + 1 ) ); // +1 = final \0
+  acol->memory_usage += sizeof( unsigned char ) * ( length + 1 );
+
+
   if ( acol->words[current_memspot].string == 0 ) { fprintf(stderr,"Could not allocate memory for string .. Adding failed! \n"); return false;}
   acol->words[current_memspot].hash = hash_data;
   acol->words[current_memspot].occurances = 1;
@@ -252,6 +283,7 @@ bool DeleteWordFromCollection( word_collection * acol,unsigned char * word,unsig
 {
   // TODO
   fprintf(stderr,"Function has no particular usage in the first project that uses TextAnalyzer so it will be implemented later :P , First Things first \n");
+  fprintf(stderr,"in the future the whole structure will be a B-Tree so no need to write it now..\n");
   return true;
 }
 
@@ -268,6 +300,7 @@ unsigned int GetWordOccurances(word_collection * acol,unsigned char * word,unsig
   act_word = (unsigned char * ) malloc (sizeof( unsigned char ) * (length + 1 ) );
   for ( unsigned short i=0; i<length; i++ )   act_word[i]=word[i];
   UpcaseIt(act_word,length);
+  CutSpaces(act_word,length);
   act_word[length]=0;
   // PREPARE WORD UPCASE DUPLICATE
 

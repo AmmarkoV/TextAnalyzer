@@ -117,7 +117,7 @@ inline bool CollectionOk(struct word_collection * acol)
 
 bool DeleteWordCollection(struct word_collection * acol)
 {
-  fprintf(stderr,"Deleting Word Collection!\n");
+  //fprintf(stderr,"Deleting Word Collection!\n");
   if ( acol != 0 )
     {
       if ( acol->sanity_byte != SANITY_BYTES_CHECK )
@@ -126,15 +126,21 @@ bool DeleteWordCollection(struct word_collection * acol)
           return false;
         }
 
+      //fprintf(stderr,"Freeing all Words !\n");
       for ( unsigned int i=0; i<acol->words_mem_length; i++ )
         {
           if ( (acol->words[i].string!=0) ) free( acol->words[i].string );
           acol->words[i].length = 0;
         }
 
+
+      //fprintf(stderr,"Freeing Words container !\n");
       if ( acol->words != 0 ) free(acol->words);
+
+      //fprintf(stderr,"Freeing Words collection !\n");
       free(acol);
     }
+
   return true;
 }
 

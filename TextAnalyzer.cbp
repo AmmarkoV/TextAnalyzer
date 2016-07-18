@@ -38,9 +38,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="HashFunctions.h" />
-		<Unit filename="TextAnalyzer.cpp" />
+		<Unit filename="TextAnalyzer.c" />
 		<Unit filename="TextAnalyzer.h" />
-		<Unit filename="WordCollection.cpp" />
+		<Unit filename="WordCollection.c" />
 		<Unit filename="WordCollection.h" />
 		<Extensions>
 			<code_completion />

@@ -24,18 +24,18 @@ struct word_collection
 };
 
 // HELPER FUNCTIONS
-bool IgnoreWord(unsigned char * theword , unsigned int wordsize );
+int IgnoreWord(unsigned char * theword , unsigned int wordsize );
 void UpcaseIt(unsigned char * text,unsigned int textsize); //Metatrepei String se Upcase
 // HELPER FUNCTIONS
 
 
 // CONSTRUCTORS / DESTRUCTORS
 struct word_collection * NewWordCollection();
-bool DeleteWordCollection(struct word_collection * acol);
+int DeleteWordCollection(struct word_collection * acol);
 
 // FUNCTIONS!
-bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned short length);
-unsigned int GetWordOccurances(word_collection * acol,unsigned char * word,unsigned short length);
+int AddWord2Collection(struct  word_collection * acol,unsigned char * word,unsigned short length);
+unsigned int GetWordOccurances(struct word_collection * acol,unsigned char * word,unsigned short length);
 
 
 

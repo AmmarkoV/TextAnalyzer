@@ -13,11 +13,11 @@ extern "C" {
 #endif
 
 
-word_collection * TextAnalyzer_NewWordCollection();
-unsigned int TextAnalyzer_WordOccurances(word_collection * acol,unsigned char * theword , unsigned int wordsize);
-void TextAnalyzer_DeleteWordCollection(word_collection * acol);
+struct word_collection * TextAnalyzer_NewWordCollection();
+unsigned int TextAnalyzer_WordOccurances(struct word_collection * acol,unsigned char * theword , unsigned int wordsize);
+void TextAnalyzer_DeleteWordCollection(struct word_collection * acol);
 
-unsigned int ClearTextFromHTMLTags(word_collection * acol,char * text,unsigned int &textsize);
+unsigned int ClearTextFromHTMLTags(struct word_collection * acol,char * text,unsigned int *textsize);
 
 #ifdef __cplusplus
 }

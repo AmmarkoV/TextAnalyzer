@@ -8,29 +8,31 @@
 // *******************************************************************************
 // HELPER FUNCTIONS
 // *******************************************************************************
-bool IgnoreWord(unsigned char * theword , unsigned int wordsize )
+int IgnoreWord(unsigned char * theword , unsigned int wordsize )
 {
-  bool retres = true;
+  int retres = 1;
   if ( wordsize > 30 ) {} else
-  if ( wordsize >= 3 ) retres = false;
+  if ( wordsize >= 3 ) retres = 0;
   return retres;
 }
 
 void UpcaseIt(unsigned char * text,unsigned int textsize) //Metatrepei String se Upcase
 {
-  for (unsigned int i=0; i<textsize; i++) text[i]=toupper(text[i]);
+  unsigned int i=0;
+  for (i=0; i<textsize; i++) text[i]=toupper(text[i]);
 }
 
-void CutSpaces(unsigned char * text,unsigned short &textsize) //Kovei ta kena deksia k aristera apo to String
+void CutSpaces(unsigned char * text,unsigned short *textsize) //Kovei ta kena deksia k aristera apo to String
 {
-  for (unsigned short i=textsize-1; i>0; i--)
+  unsigned short i;
+  for (i=textsize-1; i>0; i--)
   {
      if ( (text[i]!='_')&&(text[i]!=' ') ) break; else
                         { text[i]=0; --textsize; }
   }
 
   unsigned short start_cut = 0;
-  for (unsigned short i=0; i<textsize; i++)
+  for (i=0; i<textsize; i++)
   {
      if ( (text[i]!='_')&&(text[i]!=' ') ) break; else
                         { ++start_cut; }
@@ -38,7 +40,7 @@ void CutSpaces(unsigned char * text,unsigned short &textsize) //Kovei ta kena de
   }
   if ( start_cut > 0 )
   {
-   for (unsigned short i=start_cut; i<textsize; i++)
+   for (i=start_cut; i<textsize; i++)
    {
      text[i-start_cut]=text[i];
    }
@@ -79,43 +81,44 @@ inline void SanityProblem()
 */
 
 // STRING COMPARISON WITH A STRING STORED @ Word Collection - NH means NOT using HASH
-inline bool NH_StringEqualToWordInCollection(word_collection * acol,unsigned int index,unsigned char * word,unsigned short length)
+inline int NH_StringEqualToWordInCollection(struct word_collection * acol,unsigned int index,unsigned char * word,unsigned short length)
 {
-  if ( (acol->words[index].length==0) || ( acol->words[index].length!=length ) ) return false;
+  if ( (acol->words[index].length==0) || ( acol->words[index].length!=length ) ) return 0;
 
-  for ( int i=0; i<length; i++)
+  unsigned int i;
+  for (i=0; i<length; i++)
     {
-      if (acol->words[index].string[i]!=word[i]) return false;
+      if (acol->words[index].string[i]!=word[i]) return 0;
     }
-  return true;
+  return 1;
 }
 
 
 // STRING COMPARISON WITH A STRING STORED @ Word Collection - H means using HASH
-inline bool H_StringEqualToWordInCollection(word_collection * acol,unsigned int index,unsigned long word_hash)
+inline int H_StringEqualToWordInCollection(struct word_collection * acol,unsigned int index,unsigned long word_hash)
 {
-  if ( acol->words[index].hash!=word_hash ) return false;
-  return true;
+  if ( acol->words[index].hash!=word_hash ) return 0;
+  return 1;
 }
 
 
-inline bool CollectionOk(struct word_collection * acol)
+inline int CollectionOk(struct word_collection * acol)
 {
   if ( acol != 0 )
     {
       if ( acol->sanity_byte != SANITY_BYTES_CHECK )
         {
           SanityProblem();
-          return false;
+          return 0;
         }
-      return true;
+      return 1;
     }
   fprintf(stderr,"WordCollection has memory problem! \n");
-  return false;
+  return 0;
 }
 
 
-bool DeleteWordCollection(struct word_collection * acol)
+int DeleteWordCollection(struct word_collection * acol)
 {
   //fprintf(stderr,"Deleting Word Collection!\n");
   if ( acol != 0 )
@@ -123,11 +126,12 @@ bool DeleteWordCollection(struct word_collection * acol)
       if ( acol->sanity_byte != SANITY_BYTES_CHECK )
         {
           SanityProblem();
-          return false;
+          return 0;
         }
 
       //fprintf(stderr,"Freeing all Words !\n");
-      for ( unsigned int i=0; i<acol->words_mem_length; i++ )
+      unsigned int i=0;
+      for ( i=0; i<acol->words_mem_length; i++ )
         {
           if ( (acol->words[i].string!=0) ) free( acol->words[i].string );
           acol->words[i].length = 0;
@@ -141,7 +145,7 @@ bool DeleteWordCollection(struct word_collection * acol)
       free(acol);
     }
 
-  return true;
+  return 1;
 }
 
 struct word_collection * NewWordCollection()
@@ -160,7 +164,8 @@ struct word_collection * NewWordCollection()
   acol->words = ( struct word  * ) malloc ( sizeof( tmpw )* ( acol->words_mem_length_cap )  );
   acol->memory_usage += sizeof( tmpw )* ( acol->words_mem_length_cap );
 
-  for ( int i=0; i < acol->words_mem_length_cap; i++)
+  unsigned int i=0;
+  for ( i=0; i < acol->words_mem_length_cap; i++)
   {
     acol->words[i].hash=0;
     acol->words[i].occurances=0;
@@ -174,13 +179,14 @@ struct word_collection * NewWordCollection()
 }
 
 
-unsigned int FindWordAtCollection(word_collection * acol, unsigned long hash_data , unsigned char * word,unsigned short length)
+unsigned int FindWordAtCollection(struct word_collection * acol, unsigned long hash_data , unsigned char * word,unsigned short length)
 {
   if ( !CollectionOk(acol) ) return 0;
 
   fprintf(stderr,"Searching for `%s` between %u words! ... ",word,acol->words_mem_length);
   // SERIAL SEARCH ! , TO BE IMPROVED :P
-  for ( unsigned int i = 0; i <= acol->words_mem_length; i++ )
+  unsigned int i = 0;
+  for (  i = 0; i <= acol->words_mem_length; i++ )
     {
       if (  H_StringEqualToWordInCollection(acol,i,hash_data) )
       {
@@ -198,7 +204,7 @@ unsigned int FindWordAtCollection(word_collection * acol, unsigned long hash_dat
   return 0;
 }
 
-bool AddNewWord2Collection(word_collection * acol,unsigned long hash_data ,unsigned char * word,unsigned short length)
+int AddNewWord2Collection(struct word_collection * acol,unsigned long hash_data ,unsigned char * word,unsigned short length)
 {
   // WORD ASSUMED TO BE AN <<UPCASE>> WORD!
   unsigned int current_memspot = acol->words_mem_length;
@@ -206,19 +212,19 @@ bool AddNewWord2Collection(word_collection * acol,unsigned long hash_data ,unsig
   if (  acol->words_mem_length_cap <= current_memspot )
     {
       fprintf(stderr, "Reached Word Collection Peak .. !! :P , I should reallocate memory to accomodate more data but first things first :P \n");
-      return false;
+      return 0;
     }
 
   acol->words[current_memspot].string =(unsigned char *) malloc ( sizeof( unsigned char ) * ( length + 1 ) ); // +1 = final \0
   acol->memory_usage += sizeof( unsigned char ) * ( length + 1 );
 
 
-  if ( acol->words[current_memspot].string == 0 ) { fprintf(stderr,"Could not allocate memory for string .. Adding failed! \n"); return false;}
+  if ( acol->words[current_memspot].string == 0 ) { fprintf(stderr,"Could not allocate memory for string .. Adding failed! \n"); return 0;}
   acol->words[current_memspot].hash = hash_data;
   acol->words[current_memspot].occurances = 1;
   acol->words[current_memspot].length = length;
-
-  for ( unsigned int i=0; i<length; i++ )
+  unsigned int i=0;
+  for (  i=0; i<length; i++ )
     {
       acol->words[current_memspot].string[i] = word[i];
     }
@@ -226,13 +232,13 @@ bool AddNewWord2Collection(word_collection * acol,unsigned long hash_data ,unsig
 
   acol->words_mem_length+=1;
   acol->total_words+=1;
-  return true;
+  return 1;
 }
 
-bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned short length)
+int AddWord2Collection(struct  word_collection * acol,unsigned char * word,unsigned short length)
 {
-  if ( !CollectionOk(acol) ) return false;
-  if ( length == 0 ) { return false; } // Safe guard
+  if ( !CollectionOk(acol) ) return 0;
+  if ( length == 0 ) { return 0; } // Safe guard
 
   // Check if word contains an ending \0 , we dont need it , remove it :P
   if (word[length-1]==0) {length -= 1;}
@@ -241,7 +247,9 @@ bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned sh
   // PREPARE WORD UPCASE DUPLICATE  // DONT FORGET TO FREE IT AFTERWARDS
   unsigned char * act_word; // <- The actual word , upcased :P
   act_word = (unsigned char * ) malloc (sizeof( unsigned char ) * (length + 1 ) );
-  for ( unsigned short i=0; i<length; i++ ) act_word[i]=word[i];
+
+  unsigned short i=0;
+  for ( i=0; i<length; i++ ) act_word[i]=word[i];
   UpcaseIt(act_word,length);
   act_word[length]=0;
   // PREPARE WORD UPCASE DUPLICATE
@@ -251,7 +259,7 @@ bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned sh
   // HASH , FAST SEARCH!
   unsigned int memspot = FindWordAtCollection(acol,hash_data,act_word,length);
   unsigned char found=0;
-  bool retres=true;
+  int retres=1;
   if ( memspot == 0 )
     {
       // 2 possible states #1 we didn`t find a word ( we should add it as a new then )
@@ -285,15 +293,15 @@ bool AddWord2Collection( word_collection * acol,unsigned char * word,unsigned sh
   return retres;
 }
 
-bool DeleteWordFromCollection( word_collection * acol,unsigned char * word,unsigned short length)
+int DeleteWordFromCollection(struct  word_collection * acol,unsigned char * word,unsigned short length)
 {
   // TODO
   fprintf(stderr,"Function has no particular usage in the first project that uses TextAnalyzer so it will be implemented later :P , First Things first \n");
   fprintf(stderr,"in the future the whole structure will be a B-Tree so no need to write it now..\n");
-  return true;
+  return 1;
 }
 
-unsigned int GetWordOccurances(word_collection * acol,unsigned char * word,unsigned short length)
+unsigned int GetWordOccurances(struct word_collection * acol,unsigned char * word,unsigned short length)
 {
   if ( IgnoreWord(word,length) )
     {
@@ -304,9 +312,10 @@ unsigned int GetWordOccurances(word_collection * acol,unsigned char * word,unsig
   // PREPARE WORD UPCASE DUPLICATE  // DONT FORGET TO FREE IT AFTERWARDS
   unsigned char * act_word; // <- The actual word , upcased :P
   act_word = (unsigned char * ) malloc (sizeof( unsigned char ) * (length + 1 ) );
-  for ( unsigned short i=0; i<length; i++ )   act_word[i]=word[i];
+  unsigned short i=0;
+  for ( i=0; i<length; i++ )   act_word[i]=word[i];
   UpcaseIt(act_word,length);
-  CutSpaces(act_word,length);
+  CutSpaces(act_word,&length);
   act_word[length]=0;
   // PREPARE WORD UPCASE DUPLICATE
 
